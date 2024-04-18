@@ -1,8 +1,5 @@
 #!/bin/bash
 
-# remover se já compilado
-gcc -o thingpark_downlink_build.bin *.c
-
 CLIENT_ID=$(cat keys/CLIENT_ID)
 CLIENT_SECRET=$(cat keys/CLIENT_SECRET)
 
@@ -34,6 +31,7 @@ token() {
 
 send_request() {
     eui="$1"
+    name="$2"
     local access_token
     access_token=$(token)
 
@@ -43,7 +41,7 @@ send_request() {
     -H "Accept: application/json" \
     -d ''
 
-    echo "done at $(date '+%T.%3N')"
+    echo "Downlink sent to gateway at $(date '+%T.%3N') on badge: $name"
 }
 export -f token
 export -f send_request
@@ -61,19 +59,21 @@ curl \
    "https://community.thingpark.io/thingpark/wireless/rest/subscriptions/mine/devices?name=$NAME_FILTER&healthState=ACTIVE" | jq \
    >> JSON_output/verbose.json
 
-
 truncate -s 0 JSON_output/final.json
-./thingpark_downlink_build.bin >> JSON_output/final.json
 
-EUI_ARRAY=$(jq '.EUI.[]' JSON_output/final.json)
+jq '[.briefs[] | {Name: .name, EUI: .EUI}]' JSON_output/verbose.json >> JSON_output/final.json
+
+rm -rf JSON_output/verbose.json
+
+EUI_ARRAY=$(jq -r '.[].EUI' JSON_output/final.json)
+NAME_ARRAY=$(jq -r '.[].Name' JSON_output/final.json)
 
 IFS=$'\n' read -d '' -r -a EUI_ARRAY <<< "$EUI_ARRAY"
+IFS=$'\n' read -d '' -r -a NAME_ARRAY <<< "$NAME_ARRAY"
 
 for ((i = 0; i < ${#EUI_ARRAY[@]}; i++)); do
-    EUI_ARRAY[i]=$(sed 's/"//g' <<< "${EUI_ARRAY[i]}")
-done
-
-for eui in "${EUI_ARRAY[@]}"; do
-    send_request "$eui" "$PAYLOAD" &
+    eui=${EUI_ARRAY[i]}
+    name=${NAME_ARRAY[i]}
+    send_request "$eui" "$name" &
 done
 wait
