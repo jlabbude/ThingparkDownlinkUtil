@@ -5,3 +5,4 @@ keys/CLIENT_SECRET
 thingpark_downlink_build.bin
 cJSON.c
 cJSON.h
+main.c
