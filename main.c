@@ -3,31 +3,25 @@
 #include <string.h>
 #include "cJSON.h"
 
-char *build_final_json(const char *eui_array[], int eui_count) {
-    // Create a root JSON object
+char *build_final_json(const char *eui_array[], const char *device_name_array[], int eui_count) {
     cJSON *root = cJSON_CreateObject();
-    // Create a JSON array to hold the EUIs
     cJSON *eui_json_array = cJSON_CreateArray();
 
-    // Loop through each EUI and add it to the array
     for (int i = 0; i < eui_count; i++) {
-        // Create a JSON string for each EUI and add it to the array
-        cJSON *eui_item = cJSON_CreateString(eui_array[i]);
-        cJSON_AddItemToArray(eui_json_array, eui_item);
+        cJSON *device_jsonobj = cJSON_CreateObject();
+        cJSON_AddStringToObject(device_jsonobj, "name", device_name_array[i]); // Assuming "name" is the key for device names
+        cJSON_AddStringToObject(device_jsonobj, "EUI", eui_array[i]);
+        cJSON_AddItemToArray(eui_json_array, device_jsonobj);
     }
 
-    // Add the array of EUIs to the root object under the key "EUI"
-    cJSON_AddItemToObject(root, "EUI", eui_json_array);
+    cJSON_AddItemToObject(root, "devices", eui_json_array);
 
-    // Convert the root JSON object to a string
     char *json_str = cJSON_Print(root);
-    // Delete the root JSON object to free memory
     cJSON_Delete(root);
 
     return json_str;
 }
 
-//recursively filters JSONs
 void filterJSON(const cJSON *json, const char *key, const char **eui_array, int *eui_count) {
     if (json == NULL) return;
 
@@ -36,6 +30,8 @@ void filterJSON(const cJSON *json, const char *key, const char **eui_array, int 
         if (item != NULL && cJSON_IsString(item) && strcmp(item->string, key) == 0) {
             // Add the value of the string to the EUI array
             eui_array[(*eui_count)++] = strdup(item->valuestring);
+
+            printf("Added: %s\n", item->valuestring);
         }
         // Recursively call filterJSON for each child element
         cJSON *child;
@@ -82,17 +78,18 @@ int main() {
         return 1;
     }
 
-    const char *filter_key = "EUI";
     const int max_eui_count = 100; //TODO Maybe change later
     const char *eui_array[max_eui_count];
+    const char *name_array[max_eui_count];
     int eui_count = 0;
 
-    filterJSON(json, filter_key, eui_array, &eui_count);
+    filterJSON(json, "EUI", eui_array, &eui_count);
+    filterJSON(json, "name", name_array, &eui_count);
 
-    char *final_json = build_final_json(eui_array, eui_count);
+    char *final_json = build_final_json(eui_array, name_array, eui_count);
     printf("%s\n", final_json);
 
-    cJSON_free(final_json);
+    free(final_json);
     cJSON_Delete(json);
     free(json_str);
 
