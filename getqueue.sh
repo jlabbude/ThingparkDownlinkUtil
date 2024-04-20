@@ -72,7 +72,7 @@ done
 
 clear
 
-jq '.briefs[].name' JSON_output/verbose.json
+jq '.briefs[].name' JSON_output/verbose.json >> payloadlog.txt
 
 printf "\e[1;32m\041\041\041\041 All downlinks have arrived \041\041\041\041 \e[0m\n"
 
