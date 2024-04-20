@@ -21,15 +21,8 @@ send_new_check(){
 
 send_new_check
 
-EUI_ARRAY=$(jq -r '.briefs[].EUI' JSON_output/verbose_new.json)
+EUI_ARRAY=$(jq -r '.briefs[].EUI' JSON_output/verbose.json)
 IFS=$'\n' read -d '' -r -a EUI_ARRAY <<< "$EUI_ARRAY"
-
-declare -A EUI_STATUS
-for eui in "${EUI_ARRAY[@]}"; do
-    EUI_STATUS["$eui"]=0  
-    # 0 means downlink not arrived
-    # 1 means downlink arrived
-done
 
 while true; do
     all_downlinks_arrived=true
@@ -37,20 +30,17 @@ while true; do
     printf "Downlinks sent to the gateway: \n \n"
 
     for eui in "${EUI_ARRAY[@]}"; do
-        if [ "${EUI_STATUS["$eui"]}" -eq 0 ]; then
-            LAST_DW_OLD=$(jq -r --arg eui "$eui" '.briefs[] | select(.EUI == $eui).lastDwTimestamp' JSON_output/verbose.json)
-            LAST_DW_NEW=$(jq -r --arg eui "$eui" '.briefs[] | select(.EUI == $eui).lastDwTimestamp' JSON_output/verbose_new.json)
+        LAST_DW_OLD=$(jq -r --arg eui "$eui" '.briefs[] | select(.EUI == $eui).lastDwTimestamp' JSON_output/verbose.json)
+        LAST_DW_NEW=$(jq -r --arg eui "$eui" '.briefs[] | select(.EUI == $eui).lastDwTimestamp' JSON_output/verbose_new.json)
 
-            if [ "$LAST_DW_NEW" -gt "$LAST_DW_OLD" ]; then
-                printf "\e[1;32mV  Downlink from: $(jq -r --arg eui "$eui" '.briefs[] | select(.EUI == $eui).name' JSON_output/verbose.json) has arrived\n\e[0m"
-                
-                EUI_STATUS["$eui"]=1  # update status to downlink arrived
+        if [ "$LAST_DW_NEW" -gt "$LAST_DW_OLD" ]; then
 
-            else
-                printf "\e[1;31mX  Downlink from: $(jq -r --arg eui "$eui" '.briefs[] | select(.EUI == $eui).name' JSON_output/verbose.json) has not arrived\n\e[0m"
+            printf "\e[1;32mV  Downlink from: $(jq -r --arg eui "$eui" '.briefs[] | select(.EUI == $eui).name' JSON_output/verbose.json) has arrived\n\e[0m"
 
-                all_downlinks_arrived=false  # at least one downlink is pending
-            fi
+        else
+            printf "\e[1;31mX  Downlink from: $(jq -r --arg eui "$eui" '.briefs[] | select(.EUI == $eui).name' JSON_output/verbose.json) has not arrived\n\e[0m"
+
+            all_downlinks_arrived=false  # at least one downlink is pending
         fi
     done
 
