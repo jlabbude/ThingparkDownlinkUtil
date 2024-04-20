@@ -4,10 +4,6 @@ clear
 
 source tokenservice.sh
 
-# sanitizes the json files before using them
-truncate -s 0 JSON_output/verbose_new.json
-truncate -s 0 JSON_output/final_new.json
-
 # calls for a new device list
 # this is to compare the first device lists's 'lastDwTimestamp' parameter
 # with this new one
@@ -21,13 +17,11 @@ send_new_check(){
         "https://community.thingpark.io/thingpark/wireless/rest/subscriptions/mine/devices?name=$NAME_FILTER&healthState=ACTIVE" | jq \
         >> JSON_output/verbose_new.json
 
-    jq '[.briefs[] | {Name: .name, EUI: .EUI}]' JSON_output/verbose_new.json >> JSON_output/final_new.json
-
 }
 
 send_new_check
 
-EUI_ARRAY=$(jq -r '.[].EUI' JSON_output/final_new.json)
+EUI_ARRAY=$(jq -r '.briefs[].EUI' JSON_output/verbose_new.json)
 IFS=$'\n' read -d '' -r -a EUI_ARRAY <<< "$EUI_ARRAY"
 
 declare -A EUI_STATUS
@@ -40,37 +34,29 @@ done
 while true; do
     all_downlinks_arrived=true
 
+    printf "Downlinks sent to the gateway: \n \n"
+
     for eui in "${EUI_ARRAY[@]}"; do
         if [ "${EUI_STATUS["$eui"]}" -eq 0 ]; then
             LAST_DW_OLD=$(jq -r --arg eui "$eui" '.briefs[] | select(.EUI == $eui).lastDwTimestamp' JSON_output/verbose.json)
             LAST_DW_NEW=$(jq -r --arg eui "$eui" '.briefs[] | select(.EUI == $eui).lastDwTimestamp' JSON_output/verbose_new.json)
 
             if [ "$LAST_DW_NEW" -gt "$LAST_DW_OLD" ]; then
-                jq -r --arg eui "$eui" 'del(.[] | select(.EUI == $eui))' JSON_output/final.json > JSON_output/tmp.json && mv JSON_output/tmp.json JSON_output/final.json
-                
-                echo "   Downlink from: $(jq -r --arg eui "$eui" '.[] | select(.EUI == $eui).Name' JSON_output/final_new.json) has arrived"
+                printf "\e[1;32m   Downlink from: $(jq -r --arg eui "$eui" '.briefs[] | select(.EUI == $eui).name' JSON_output/verbose.json) has arrived\n\e[0m"
                 
                 EUI_STATUS["$eui"]=1  # update status to downlink arrived
 
             else
-                echo "X  Downlink from: $(jq -r --arg eui "$eui" '.[] | select(.EUI == $eui).Name' JSON_output/final_new.json) has not arrived"
+                printf "\e[1;31mX  Downlink from: $(jq -r --arg eui "$eui" '.briefs[] | select(.EUI == $eui).name' JSON_output/verbose.json) has not arrived\n\e[0m"
 
                 all_downlinks_arrived=false  # at least one downlink is pending
             fi
         fi
     done
 
-    sleep 5
-
-    clear
-
     if $all_downlinks_arrived; then
         break
     fi
-
-    printf "The downlinks of the following devices are still on queue: \n \n"
-    
-    jq '.[].Name' JSON_output/final.json
 
     printf "\n"
 
@@ -89,15 +75,15 @@ while true; do
     clear
 
     truncate -s 0 JSON_output/verbose_new.json
-    truncate -s 0 JSON_output/final_new.json
 
     send_new_check
 
-    EUI_ARRAY=$(jq -r '.[].EUI' JSON_output/final_new.json)
-    IFS=$'\n' read -d '' -r -a EUI_ARRAY <<< "$EUI_ARRAY"
-
 done
 
-echo "All downlinks have arrived"
+clear
+
+jq '.briefs[].name' JSON_output/verbose.json
+
+printf "\e[1;32m\041\041\041\041 All downlinks have arrived \041\041\041\041 \e[0m\n"
 
 rm -rf JSON_output/*.json
