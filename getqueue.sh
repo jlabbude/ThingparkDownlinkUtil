@@ -42,7 +42,7 @@ while true; do
             LAST_DW_NEW=$(jq -r --arg eui "$eui" '.briefs[] | select(.EUI == $eui).lastDwTimestamp' JSON_output/verbose_new.json)
 
             if [ "$LAST_DW_NEW" -gt "$LAST_DW_OLD" ]; then
-                printf "\e[1;32m   Downlink from: $(jq -r --arg eui "$eui" '.briefs[] | select(.EUI == $eui).name' JSON_output/verbose.json) has arrived\n\e[0m"
+                printf "\e[1;32mV  Downlink from: $(jq -r --arg eui "$eui" '.briefs[] | select(.EUI == $eui).name' JSON_output/verbose.json) has arrived\n\e[0m"
                 
                 EUI_STATUS["$eui"]=1  # update status to downlink arrived
 
