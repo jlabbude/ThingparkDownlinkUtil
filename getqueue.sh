@@ -19,6 +19,28 @@ send_new_check(){
 
 }
 
+printf "\n[0] to only display the downlink queue. \n\n"
+printf "[1] to display all devices broadcasted to. \n\n\n\n\n"
+
+printf "Type here: "; read -r FILACHECK_str
+
+if [[ "$FILACHECK_str" == "1" ]]; then
+
+        FILACHECK=true
+
+    elif [[ "$FILACHECK_str" == "0" ]]; then
+
+        FILACHECK=false
+
+    else
+
+        printf "Invalid value. Defaulting to all devices..."
+
+        FILACHECK=true
+fi
+
+clear
+
 send_new_check
 
 EUI_ARRAY=$(jq -r '.briefs[].EUI' JSON_output/verbose.json)
@@ -35,7 +57,11 @@ while true; do
 
         if [ "$LAST_DW_NEW" -gt "$LAST_DW_OLD" ]; then
 
-            printf "\e[1;32mV  Downlink from: $(jq -r --arg eui "$eui" '.briefs[] | select(.EUI == $eui).name' JSON_output/verbose.json) has arrived\n\e[0m"
+            if $FILACHECK -eq true; then
+
+                printf "\e[1;32mV  Downlink from: $(jq -r --arg eui "$eui" '.briefs[] | select(.EUI == $eui).name' JSON_output/verbose.json) has arrived\n\e[0m"
+
+            fi
 
         else
             printf "\e[1;31mX  Downlink from: $(jq -r --arg eui "$eui" '.briefs[] | select(.EUI == $eui).name' JSON_output/verbose.json) has not arrived\n\e[0m"
