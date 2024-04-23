@@ -1,11 +1,4 @@
-JSON_output/final.json
-JSON_output/verbose.json
-JSON_output/final_new.json
-JSON_output/verbose_new.json
+JSON_output
 keys/CLIENT_ID
 keys/CLIENT_SECRET
-thingpark_downlink_build.bin
-cJSON.c
-cJSON.h
-main.c
 payloadlog.txt
