@@ -20,3 +20,5 @@ curl -X 'POST' \
         -d ''
 
 printf "Queue cleared. \n"
+
+rm -rf JSON_output/*.json
