@@ -1,8 +1,5 @@
 #!/bin/bash
 
-# sanitize JSON directory for safe usage
-rm -rf JSON_output/*.json
-
 source tokenservice.sh
 
 send_request() {
@@ -33,7 +30,7 @@ curl \
    -H "Accept: application/json" \
    -s --show-error --fail \
    "https://community.thingpark.io/thingpark/wireless/rest/subscriptions/mine/devices?name=$NAME_FILTER&healthState=ACTIVE" | jq \
-   >> JSON_output/verbose.json
+   > JSON_output/verbose.json
 
 EUI_ARRAY=$(jq -r '.briefs[].EUI' JSON_output/verbose.json)
 NAME_ARRAY=$(jq -r '.briefs[].name' JSON_output/verbose.json)

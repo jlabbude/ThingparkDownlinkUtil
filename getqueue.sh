@@ -15,7 +15,7 @@ send_new_check(){
         -H "Accept: application/json" \
         -s --show-error --fail \
         "https://community.thingpark.io/thingpark/wireless/rest/subscriptions/mine/devices?name=$NAME_FILTER&healthState=ACTIVE" | jq \
-        >> JSON_output/verbose_new.json
+        > JSON_output/verbose_new.json
 
 }
 
@@ -89,8 +89,6 @@ while true; do
     done
 
     clear
-
-    truncate -s 0 JSON_output/verbose_new.json
 
     send_new_check
 
