@@ -15,10 +15,13 @@ sf_dict = {
     11 : 17.5,
     12 : 20
 }
+devices_dict = {
+    0 : [get_device_location, random.randomint(0, 59)]
+}
 signal_strenth_array=[] # needed to calculate NF later
 
 def get_device_location():
-    angle = random.randint(1,360)
+    angle = random.randint(0, 359)
     distance = random.randint(0, radius_size)
     device_pos = [angle, distance]
 
@@ -29,8 +32,8 @@ def signal_sens_formula():
     noise_figure_current = noise_figure_start # todo implement dynamic NF calculation
 
     signal_strenth_array.append( # formula declaration
-        -174+
-        (10*math.log10(500)) # BW from DW channels are always 500 MHz
-        + noise_floor_current
-        +sf_dict.get(sf_value) # noise floor from SF
+        -174 +
+        (10*math.log10(500)) + # BW from DW channels are always 500 MHz
+        noise_floor_current +
+        sf_dict.get(sf_value) # noise floor from SF 
     )
