@@ -3,3 +3,4 @@ keys/CLIENT_ID
 keys/CLIENT_SECRET
 payloadlog.txt
 .vscode
+config.cfg
