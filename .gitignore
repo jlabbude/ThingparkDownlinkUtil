@@ -3,5 +3,6 @@ keys/CLIENT_ID
 keys/CLIENT_SECRET
 payloadlog.txt
 .vscode
+**\cfgdicts/__pycache__
 config.cfg
 log.txt
